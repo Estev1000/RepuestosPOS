@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GearStock - Sistema de Repuestos</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Icons -->
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <!-- SheetJS for Excel -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="logo">
+                <i class='bx bxs-car-mechanic'></i>
+                <span class="logo-name">GearStock</span>
+                <i class='bx bx-menu-alt-right' id="menu-close"
+                    style="display: none; font-size: 1.5rem; cursor: pointer;"></i>
+            </div>
+
+            <ul class="nav-links">
+                <li class="active">
+                    <a href="#">
+                        <i class='bx bxs-dashboard'></i>
+                        <span>Panel Principal</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class='bx bxs-cart-add'></i>
+                        <span>Nueva Venta</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class='bx bxs-package'></i>
+                        <span>Inventario</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class='bx bxs-user-detail'></i>
+                        <span>Clientes</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class='bx bxs-report'></i>
+                        <span>Reportes</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class='bx bxs-cog'></i>
+                        <span>Configuración</span>
+                    </a>
+                </li>
+            </ul>
+
+            <div class="user-profile">
+                <img src="https://ui-avatars.com/api/?name=Admin+User&background=3b82f6&color=fff" alt="Admin">
+                <div class="user-info">
+                    <h4>Administrador</h4>
+                    <p>Gerente</p>
+                </div>
+                <i class='bx bx-log-out' id="logout-btn"></i>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div id="sidebar-overlay"
+                style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 99; backdrop-filter: blur(4px);">
+            </div>
+
+            <!-- Dashboard View -->
+            <section id="dashboard-view">
+                <!-- Header -->
+                <header>
+                    <div class="mobile-menu-toggle" id="menu-open">
+                        <i class='bx bx-menu'></i>
+                    </div>
+                    <div class="header-title">
+                        <h1>Panel de Control</h1>
+                        <p>Bienvenido de nuevo, aquí tienes el resumen de hoy.</p>
+                    </div>
+                    <div class="search-box">
+                        <i class='bx bx-search'></i>
+                        <input type="text" id="dashboard-search" placeholder="Buscar repuesto, código o marca...">
+                    </div>
+                    <div class="header-actions">
+                        <button class="icon-btn"><i class='bx bxs-bell'></i><span class="badge">3</span></button>
+                        <button class="primary-btn" id="quick-sale-btn"><i class='bx bx-plus'></i> Venta Rápida</button>
+                    </div>
+                </header>
+
+                <!-- Stats Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon revenue">
+                            <i class='bx bx-dollar-circle'></i>
+                        </div>
+                        <div class="stat-details">
+                            <h3>Ventas de Hoy</h3>
+                            <h2 id="stat-sales">$0</h2>
+                            <span class="trend up"><i class='bx bx-up-arrow-alt'></i> +12%</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon orders">
+                            <i class='bx bx-shopping-bag'></i>
+                        </div>
+                        <div class="stat-details">
+                            <h3>Pedidos</h3>
+                            <h2 id="stat-orders">0</h2>
+                            <span class="trend up"><i class='bx bx-up-arrow-alt'></i> +5%</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon products">
+                            <i class='bx bxs-car-battery'></i>
+                        </div>
+                        <div class="stat-details">
+                            <h3>Stock Crítico</h3>
+                            <h2 id="stat-low-stock">0</h2>
+                            <span class="trend down"><i class='bx bx-error-circle'></i> Alerta</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon customers">
+                            <i class='bx bxs-group'></i>
+                        </div>
+                        <div class="stat-details">
+                            <h3>Total Productos</h3>
+                            <h2 id="stat-total-products">0</h2>
+                            <span class="trend up"><i class='bx bx-smile'></i> Activos</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Sales & Popular Products -->
+                <div class="content-grid">
+                    <div class="card recent-transactions">
+                        <div class="card-header">
+                            <h3>Ventas Recientes</h3>
+                            <a href="#" class="view-all">Ver todas</a>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Cliente</th>
+                                    <th>Artículos</th>
+                                    <th>Total</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recent-sales-table">
+                                <!-- Dynamic content -->
+                                <tr>
+                                    <td colspan="5"
+                                        style="text-align: center; padding: 2rem; color: var(--text-muted);">No hay
+                                        ventas registradas hoy</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="card top-products">
+                        <div class="card-header">
+                            <h3>Más Vendidos</h3>
+                        </div>
+                        <div class="product-list" id="popular-products-list">
+                            <div style="text-align: center; color: var(--text-muted); padding: 1rem;">Sin datos de
+                                ventas</div>
+                        </div>
+                        <button class="secondary-btn full-width" id="go-to-inventory">Gestionar Inventario</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Inventory View -->
+            <section id="inventory-view" style="display: none;">
+                <header>
+                    <div class="mobile-menu-toggle" id="menu-open-inv">
+                        <i class='bx bx-menu'></i>
+                    </div>
+                    <div class="header-title">
+                        <h1>Gestión de Inventario</h1>
+                        <p>Administra tus repuestos, stock y precios.</p>
+                    </div>
+                    <div class="search-box">
+                        <i class='bx bx-search'></i>
+                        <input type="text" id="inventory-search" placeholder="Filtrar por nombre, código o marca...">
+                    </div>
+                    <div class="header-actions">
+                        <button class="primary-btn" id="add-product-btn"><i class='bx bx-plus'></i> Nuevo
+                            Repuesto</button>
+                    </div>
+                </header>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Lista de Repuestos</h3>
+                        <div class="table-filters">
+                            <select id="filter-category" class="styled-select">
+                                <option value="all">Todas las categorías</option>
+                                <option value="Motor">Motor</option>
+                                <option value="Frenos">Frenos</option>
+                                <option value="Subchasis">Subchasis</option>
+                                <option value="Electricidad">Electricidad</option>
+                                <option value="Lubricantes">Lubricantes</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table id="inventory-table">
+                            <thead>
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Producto</th>
+                                    <th>Marca</th>
+                                    <th>Categoría</th>
+                                    <th>Precio</th>
+                                    <th>Stock</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Dynamic Inventory Rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Sale View -->
+            <section id="sale-view" style="display: none;">
+                <header>
+                    <div class="mobile-menu-toggle" id="menu-open-sale">
+                        <i class='bx bx-menu'></i>
+                    </div>
+                    <div class="header-title">
+                        <h1>Nueva Venta</h1>
+                        <p>Busca productos y genera el ticket de venta.</p>
+                    </div>
+                </header>
+
+                <div class="content-grid pos-grid">
+                    <!-- Product Selection -->
+                    <div class="card product-selection">
+                        <div class="search-box full-width" style="margin-bottom: 1.5rem;">
+                            <i class='bx bx-search'></i>
+                            <input type="text" id="pos-search" placeholder="Escribe nombre o código del repuesto...">
+                        </div>
+                        <div class="pos-products-grid" id="pos-products-list">
+                            <!-- Dynamic Products for Sale -->
+                        </div>
+                    </div>
+
+                    <!-- Cart / Summary -->
+                    <div class="card cart-summary">
+                        <div class="card-header">
+                            <h3>Carrito de Compra</h3>
+                            <button class="icon-btn" id="clear-cart" title="Vaciar Carrito"><i
+                                    class='bx bx-trash'></i></button>
+                        </div>
+                        <div class="cart-items" id="cart-items-list">
+                            <!-- Dynamic Cart Items -->
+                        </div>
+
+                        <div class="cart-totals">
+                            <div class="total-row">
+                                <span>Subtotal</span>
+                                <span id="cart-subtotal">$0</span>
+                            </div>
+                            <div class="total-row main-total">
+                                <span>Total</span>
+                                <span id="cart-total">$0</span>
+                            </div>
+                        </div>
+
+                        <div class="client-selection-pos" style="margin-bottom: 1.5rem;">
+                            <label
+                                style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem;">Cliente
+                                / Taller</label>
+                            <select id="pos-client-select" class="styled-select full-width"
+                                style="margin-bottom: 10px;">
+                                <option value="Consumidor Final">Consumidor Final</option>
+                                <!-- Dynamic Clients here -->
+                            </select>
+                            <input type="text" id="pos-sub-client" class="styled-select full-width"
+                                placeholder="Nombre del cliente del taller (Opcional)"
+                                style="font-size: 0.85rem; padding: 10px;">
+                        </div>
+
+                        <div class="payment-methods">
+                            <label>Método de Pago</label>
+                            <div class="method-options">
+                                <button class="method-btn active" data-method="Efectivo"><i class='bx bx-money'></i>
+                                    Efectivo</button>
+                                <button class="method-btn" data-method="Tarjeta"><i class='bx bx-credit-card'></i>
+                                    Tarjeta</button>
+                                <button class="method-btn" data-method="Transferencia"><i class='bx bx-transfer'></i>
+                                    Transf.</button>
+                                <button class="method-btn" data-method="A Cuenta"><i class='bx bx-time-five'></i> A
+                                    Cuenta</button>
+                            </div>
+                        </div>
+
+                        <button class="primary-btn full-width checkout-btn" id="finalize-sale">
+                            <i class='bx bx-check-circle'></i> Finalizar Venta
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Clients View -->
+            <section id="clients-view" style="display: none;">
+                <header>
+                    <div class="mobile-menu-toggle" id="menu-open-clients">
+                        <i class='bx bx-menu'></i>
+                    </div>
+                    <div class="header-title">
+                        <h1>Gestión de Clientes</h1>
+                        <p>Administra tu base de datos de clientes y talleres.</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="primary-btn" id="add-client-btn"><i class='bx bx-user-plus'></i> Nuevo
+                            Cliente</button>
+                    </div>
+                </header>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Cartera de Clientes</h3>
+                    </div>
+                    <div class="table-container">
+                        <table id="clients-table">
+                            <thead>
+                                <tr>
+                                    <th>Nombre / Taller</th>
+                                    <th>DNI / CUIT</th>
+                                    <th>Teléfono</th>
+                                    <th>Email</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Dynamic Clients Rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Reports View -->
+            <section id="reports-view" style="display: none;">
+                <header>
+                    <div class="mobile-menu-toggle" id="menu-open-reports">
+                        <i class='bx bx-menu'></i>
+                    </div>
+                    <div class="header-title">
+                        <h1>Reportes y Estadísticas</h1>
+                        <p>Analiza el rendimiento de tu negocio.</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="secondary-btn" id="export-json" title="Exportar JSON"><i
+                                class='bx bxs-file-json'></i> JSON</button>
+                        <button class="secondary-btn" id="export-excel" title="Exportar Excel"><i
+                                class='bx bxs-file-export'></i> Excel</button>
+                        <button class="primary-btn" id="import-btn" title="Cargar Datos"><i
+                                class='bx bxs-cloud-upload'></i> Importar</button>
+                        <input type="file" id="import-input" style="display: none;" accept=".json,.xlsx">
+                    </div>
+                </header>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon revenue">
+                            <i class='bx bx-trending-up'></i>
+                        </div>
+                        <div class="stat-details">
+                            <h3>Total Vendido</h3>
+                            <h2 id="report-total-revenue">$0</h2>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon customers">
+                            <i class='bx bx-user-check'></i>
+                        </div>
+                        <div class="stat-details">
+                            <h3>Promedio por Venta</h3>
+                            <h2 id="report-avg-sale">$0</h2>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Historial de Ventas</h3>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Transacción</th>
+                                    <th>Artículos</th>
+                                    <th>Método</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody id="full-sales-history">
+                                <!-- Dynamic Sales -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Settings View -->
+            <section id="settings-view" style="display: none;">
+                <header>
+                    <div class="mobile-menu-toggle" id="menu-open-settings">
+                        <i class='bx bx-menu'></i>
+                    </div>
+                    <div class="header-title">
+                        <h1>Configuración del Sistema</h1>
+                        <p>Personaliza tu experiencia y gestiona tus datos.</p>
+                    </div>
+                </header>
+
+                <div class="content-grid pos-grid" style="grid-template-columns: 1.5fr 1fr;">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class='bx bx-store-alt'></i> Perfil del Negocio</h3>
+                        </div>
+                        <form id="settings-form" class="form-grid" style="padding: 1.5rem; display: grid; gap: 1rem;">
+                            <div class="form-group">
+                                <label>Nombre del Comercio</label>
+                                <input type="text" id="set-store-name" value="GearStock">
+                            </div>
+                            <div class="form-group">
+                                <label>Eslogan o Subtítulo</label>
+                                <input type="text" id="set-store-slogan" value="Sistema de Repuestos">
+                            </div>
+                            <div class="form-group">
+                                <label>CUIT / Impuestos</label>
+                                <input type="text" id="set-store-tax" placeholder="20-XXXXXXXX-X">
+                            </div>
+                            <div class="form-group">
+                                <label>Dirección</label>
+                                <input type="text" id="set-store-address" placeholder="Av. Siempre Viva 742">
+                            </div>
+                            <button type="submit" class="primary-btn" style="margin-top: 1rem;">Guardar Cambios</button>
+                        </form>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class='bx bx-shield-quarter'></i> Mantenimiento</h3>
+                        </div>
+                        <div style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
+                            <p style="font-size: 0.85rem; color: var(--text-muted);">
+                                Estas acciones son irreversibles. Asegúrate de haber exportado tus datos primero.
+                            </p>
+                            <button class="action-btn delete" id="clear-db-btn"
+                                style="width: 100%; padding: 12px; height: auto;">
+                                <i class='bx bx-trash'></i> Borrar Toda la Base de Datos
+                            </button>
+                            <hr style="border: none; border-top: 1px solid var(--border-glass); margin: 5px 0;">
+                            <div class="form-group">
+                                <label>Porcentaje de IVA (%)</label>
+                                <input type="number" id="set-tax-percent" value="21">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal for Adding/Editing Product -->
+    <div id="product-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Añadir Nuevo Repuesto</h2>
+                <i class='bx bx-x close-modal'></i>
+            </div>
+            <form id="product-form">
+                <input type="hidden" id="edit-id">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="p-code">Código / SKU</label>
+                        <input type="text" id="p-code" required placeholder="Ej: ALT-4592">
+                    </div>
+                    <div class="form-group">
+                        <label for="p-name">Nombre del Repuesto</label>
+                        <input type="text" id="p-name" required placeholder="Ej: Alternador 90A">
+                    </div>
+                    <div class="form-group">
+                        <label for="p-brand">Marca</label>
+                        <input type="text" id="p-brand" required placeholder="Ej: Bosch / Valeo">
+                    </div>
+                    <div class="form-group">
+                        <label for="p-category">Categoría</label>
+                        <select id="p-category" required>
+                            <option value="Motor">Motor</option>
+                            <option value="Frenos">Frenos</option>
+                            <option value="Subchasis">Subchasis</option>
+                            <option value="Electricidad">Electricidad</option>
+                            <option value="Lubricantes">Lubricantes</option>
+                            <option value="Efectivo">Accesorios</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="p-price">Precio de Venta ($)</label>
+                        <input type="number" id="p-price" required step="0.01" placeholder="0.00">
+                    </div>
+                    <div class="form-group">
+                        <label for="p-stock">Stock Inicial</label>
+                        <input type="number" id="p-stock" required placeholder="0">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="secondary-btn close-modal">Cancelar</button>
+                    <button type="submit" class="primary-btn">Guardar Repuesto</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal for Adding/Editing Client -->
+    <div id="client-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="client-modal-title">Añadir Nuevo Cliente</h2>
+                <i class='bx bx-x close-client-modal'></i>
+            </div>
+            <form id="client-form">
+                <input type="hidden" id="edit-client-id">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="c-name">Nombre Completo o Taller</label>
+                        <input type="text" id="c-name" required placeholder="Ej: Juan Pérez / Taller El Rayo">
+                    </div>
+                    <div class="form-group">
+                        <label for="c-tax-id">DNI / CUIT</label>
+                        <input type="text" id="c-tax-id" required placeholder="20-XXXXXXXX-X">
+                    </div>
+                    <div class="form-group">
+                        <label for="c-phone">Teléfono</label>
+                        <input type="text" id="c-phone" placeholder="+54 9 ...">
+                    </div>
+                    <div class="form-group">
+                        <label for="c-email">Email</label>
+                        <input type="email" id="c-email" placeholder="cliente@correo.com">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="secondary-btn close-client-modal">Cancelar</button>
+                    <button type="submit" class="primary-btn">Guardar Cliente</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+
+</html>
